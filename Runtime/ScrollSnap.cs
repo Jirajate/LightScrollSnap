@@ -51,6 +51,7 @@ namespace LightScrollSnap
         private int _nearestIndex;
         private float _nearestPos;
         private bool HasItem => _items != null && _items.Count > 0;
+        private float totalWidth;
 
         #endregion
 
@@ -101,28 +102,56 @@ namespace LightScrollSnap
         {
             _itemCount = Content.childCount;
             _posses = new float[_itemCount];
-
-            _distance = _itemCount > 1 ? 1f / (_itemCount - 1f) : 1;
             _items = new List<RectTransform>(_itemCount);
+            totalWidth = 0;
+            float _width = 0;
+
+            //for (int i = 0; i < _itemCount; i++)
+            //{
+            //    _items.Add(Content.GetChild(i).GetComponent<RectTransform>());
+            //    _distance = _itemCount > 1 ? 1f / (_itemCount - 1f) : 1;
+            //    _posses[i] = _distance * i;
+            //}
+
             for (int i = 0; i < _itemCount; i++)
             {
                 _items.Add(Content.GetChild(i).GetComponent<RectTransform>());
-                _posses[i] = _distance * i;
+                totalWidth += Items[i].sizeDelta.x;
             }
-
+            for (int i = 0; i < _itemCount; i++)
+            {
+                float firstItemWidth = _items[0].sizeDelta.x;
+                _width += _items[i].sizeDelta.x;
+                _posses[i] = (_width - firstItemWidth) / (totalWidth - firstItemWidth);
+            }
             SetupClickHandlers();
         }
 
         private void SetupClickHandlers()
         {
+            //_itemClickHandlers = new List<ScrollItemClickHandler>(_itemCount);
+            //for (int i = 0; i < _itemCount; i++)
+            //{
+            //    var item = _items[i];
+            //    var clickHandler = item.gameObject.AddComponent<ScrollItemClickHandler>();
+            //    var index = i;
+            //    clickHandler.AddClickListener(() => OnAnyItemClicked(index, item));
+            //    _itemClickHandlers.Add(clickHandler);
+            //}
+
             _itemClickHandlers = new List<ScrollItemClickHandler>(_itemCount);
             for (int i = 0; i < _itemCount; i++)
             {
                 var item = _items[i];
-                var clickHandler = item.gameObject.AddComponent<ScrollItemClickHandler>();
                 var index = i;
-                clickHandler.AddClickListener(() => OnAnyItemClicked(index, item));
-                _itemClickHandlers.Add(clickHandler);
+
+                if (item.TryGetComponent<ScrollItemClickHandler>(out var _handler))
+                    _handler.RemoveAllListeners();
+                else
+                    _handler = item.gameObject.AddComponent<ScrollItemClickHandler>();
+
+                _handler.AddClickListener(() => OnAnyItemClicked(index, item));
+                _itemClickHandlers.Add(_handler);
             }
         }
 
@@ -214,11 +243,21 @@ namespace LightScrollSnap
             if (_items.Count <= 1)
                 return 0;
 
-            for (int i = 0; i < _itemCount; i++)
+            //for (int i = 0; i < _itemCount; i++)
+            //{
+            //    var pos = _posses[i];
+            //    if (Math.Abs(_scrollPos - pos) <= _distance / 2)
+            //        return i;
+            //}
+
+            for (int i = 1; i < _itemCount; i++)
             {
-                var pos = _posses[i];
-                if (Math.Abs(_scrollPos - pos) <= _distance / 2)
+                if (_posses[i] < _scrollPos) continue;
+                float _previousPos = _posses[i - 1];
+                if (Math.Abs(_posses[i] - _scrollPos) < Math.Abs(_previousPos - _scrollPos))
                     return i;
+                else
+                    return i - 1;
             }
 
             return -1;
@@ -315,6 +354,11 @@ namespace LightScrollSnap
         #endregion
 
         #region PUBLIC METHODS
+
+        public void RebuildScrollSnap() // Use for reveal objective
+        {
+            SetupItems();
+        }
 
         public void ScrollTo(float ratio)
         {
