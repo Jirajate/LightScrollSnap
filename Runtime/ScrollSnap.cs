@@ -14,20 +14,23 @@ namespace LightScrollSnap
 
         [SerializeField] private DeltaTimeMode deltaTimeMode = DeltaTimeMode.Unscaled;
 
-        [Header("Scroll Settings")] [SerializeField]
+        [Header("Scroll Settings")]
+        [SerializeField]
         private Scrollbar scrollbar;
 
-        [SerializeField] [Range(0, 1)] private float initialPos;
+        [SerializeField][Range(0, 1)] private float initialPos;
         public bool autoScrollToClickedItem = true;
         public float smoothScrollDuration = 0.35f;
         public float smoothSnapDuration = 0.25f;
 
-        [Header("Snap Settings")] [SerializeField]
+        [Header("Snap Settings")]
+        [SerializeField]
         private float snapDelayDuration = 0.15f;
 
         [SerializeField] private float snapDistanceThreshold = 0.001f;
 
-        [Header("Effect Settings")] [SerializeField]
+        [Header("Effect Settings")]
+        [SerializeField]
         private List<BaseScrollSnapEffect> effects;
 
         #endregion
@@ -60,6 +63,8 @@ namespace LightScrollSnap
         [Header("Unity Events")] public UnityEvent<RectTransform, int> OnItemSelected;
         public UnityEvent<RectTransform, int> OnItemDeSelected;
         public UnityEvent<int, RectTransform> OnItemClicked;
+        public UnityEvent<int, RectTransform> OnValueChanged;
+
 
         #endregion
 
@@ -171,10 +176,12 @@ namespace LightScrollSnap
         private void UpdateNearest()
         {
             var nearest = GetNearestIndex();
-            if (nearest != -1)
-                _nearestIndex = nearest;
+            if (nearest != -1) return;
+            if (nearest == _nearestIndex) return;
 
+            _nearestIndex = nearest;
             _nearestPos = _posses[_nearestIndex];
+            OnValueChanged?.Invoke(_nearestIndex, _items[_nearestIndex]);
         }
 
         private void UpdateAll()
