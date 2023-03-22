@@ -63,7 +63,7 @@ namespace LightScrollSnap
         [Header("Unity Events")] public UnityEvent<RectTransform, int> OnItemSelected;
         public UnityEvent<RectTransform, int> OnItemDeSelected;
         public UnityEvent<int, RectTransform> OnItemClicked;
-        public UnityEvent<int, RectTransform> OnValueChanged;
+        public Action<int, RectTransform> OnValueChanged;
 
 
         #endregion
