@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace LightScrollSnap
 {
     [RequireComponent(typeof(ScrollRect))]
-    public class ScrollSnap : MonoBehaviour
+    public class ScrollSnap : MonoBehaviour, IBeginDragHandler, IEndDragHandler
     {
         #region INSPECTOR PROPERTIES
 
@@ -63,7 +64,8 @@ namespace LightScrollSnap
         [Header("Unity Events")] public UnityEvent<RectTransform, int> OnItemSelected;
         public UnityEvent<RectTransform, int> OnItemDeSelected;
         public UnityEvent<int, RectTransform> OnItemClicked;
-        public Action<int, RectTransform> OnValueChanged;
+        public Action OnDragBegin;
+        public Action OnDragEnd;
 
 
         #endregion
@@ -176,12 +178,10 @@ namespace LightScrollSnap
         private void UpdateNearest()
         {
             var nearest = GetNearestIndex();
-            if (nearest != -1) return;
-            if (nearest == _nearestIndex) return;
+            if (nearest != -1)
+                _nearestIndex = nearest;
 
-            _nearestIndex = nearest;
             _nearestPos = _posses[_nearestIndex];
-            OnValueChanged?.Invoke(_nearestIndex, _items[_nearestIndex]);
         }
 
         private void UpdateAll()
@@ -361,6 +361,16 @@ namespace LightScrollSnap
         #endregion
 
         #region PUBLIC METHODS
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            OnDragBegin?.Invoke();
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            OnDragEnd?.Invoke();
+        }
 
         public void RebuildScrollSnap() // Use for reveal objective
         {
