@@ -162,7 +162,7 @@ namespace LightScrollSnap
             }
         }
 
-        private void OnAnyItemClicked(int index, RectTransform item)
+        public void OnAnyItemClicked(int index, RectTransform item)
         {
             OnItemClicked?.Invoke(index, item);
             if (autoScrollToClickedItem)
